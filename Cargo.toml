@@ -1,0 +1,36 @@
+[package]
+name = "wol-rs"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+authors = ["yabowarcherio <yabowarcher8590@gmail.com>"]
+description = "Build Wake-on-LAN magic packets — IPv4 broadcast/unicast, SecureOn passwords, library + CLI."
+documentation = "https://docs.rs/wol-rs"
+repository = "https://github.com/yabowarcherio/wol-rs"
+homepage = "https://github.com/yabowarcherio/wol-rs"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+keywords = ["wake-on-lan", "wol", "magic-packet", "network", "ethernet"]
+categories = ["network-programming", "command-line-utilities"]
+exclude = [".github/", "deny.toml"]
+
+[lib]
+name = "wol_rs"
+path = "src/lib.rs"
+
+[[bin]]
+name = "wol-rs"
+path = "src/main.rs"
+required-features = ["cli"]
+
+[features]
+default = ["cli"]
+cli = ["dep:clap"]
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"], optional = true }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
