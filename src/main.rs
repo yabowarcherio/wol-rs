@@ -10,9 +10,7 @@ use std::net::{IpAddr, UdpSocket};
 use std::process::ExitCode;
 
 use clap::Parser;
-use wol_rs::{
-    magic_packet, magic_packet_with_password, parse_mac, parse_password, BROADCAST_PORT,
-};
+use wol_rs::{magic_packet, magic_packet_with_password, parse_mac, parse_password, BROADCAST_PORT};
 
 /// Send Wake-on-LAN magic packets.
 #[derive(Parser, Debug)]
@@ -66,9 +64,7 @@ fn run(cli: Cli) -> Result<(), String> {
     }
 
     let sock = UdpSocket::bind("0.0.0.0:0").map_err(|e| format!("bind: {e}"))?;
-    if cli.broadcast.is_ipv4()
-        && cli.broadcast == IpAddr::from([255u8, 255, 255, 255])
-    {
+    if cli.broadcast.is_ipv4() && cli.broadcast == IpAddr::from([255u8, 255, 255, 255]) {
         sock.set_broadcast(true)
             .map_err(|e| format!("set_broadcast: {e}"))?;
     }
