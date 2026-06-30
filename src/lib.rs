@@ -51,22 +51,61 @@ pub const MAGIC_PACKET_LEN: usize = 102;
 /// Length of a magic packet *with* a SecureOn password (102 + 6 bytes).
 pub const MAGIC_PACKET_WITH_PASSWORD_LEN: usize = 108;
 
-/// Build a magic packet for `mac`: six `0xFF` bytes followed by the address
-/// repeated sixteen times.
-pub fn magic_packet(mac: [u8; 6]) -> Vec<u8> {
-    let mut out = Vec::with_capacity(MAGIC_PACKET_LEN);
-    out.extend_from_slice(&[0xFF; 6]);
-    for _ in 0..16 {
-        out.extend_from_slice(&mac);
+/// Build a magic packet for `mac` on the stack: six `0xFF` bytes followed by
+/// the address repeated sixteen times.
+///
+/// Returns a fixed-size array — no allocation. Use [`magic_packet`] when you
+/// need an owned `Vec`.
+pub const fn magic_packet_array(mac: [u8; 6]) -> [u8; MAGIC_PACKET_LEN] {
+    let mut out = [0u8; MAGIC_PACKET_LEN];
+    let mut i = 0;
+    while i < 6 {
+        out[i] = 0xFF;
+        i += 1;
+    }
+    let mut rep = 0;
+    while rep < 16 {
+        let base = 6 + rep * 6;
+        let mut j = 0;
+        while j < 6 {
+            out[base + j] = mac[j];
+            j += 1;
+        }
+        rep += 1;
     }
     out
 }
 
+/// Stack-allocated magic packet *with* a SecureOn password — a fixed-size
+/// `[u8; 108]` ready to ship over UDP, no allocation.
+pub const fn magic_packet_with_password_array(
+    mac: [u8; 6],
+    password: [u8; 6],
+) -> [u8; MAGIC_PACKET_WITH_PASSWORD_LEN] {
+    let mut out = [0u8; MAGIC_PACKET_WITH_PASSWORD_LEN];
+    let base = magic_packet_array(mac);
+    let mut i = 0;
+    while i < MAGIC_PACKET_LEN {
+        out[i] = base[i];
+        i += 1;
+    }
+    let mut j = 0;
+    while j < 6 {
+        out[MAGIC_PACKET_LEN + j] = password[j];
+        j += 1;
+    }
+    out
+}
+
+/// Build a magic packet for `mac`: six `0xFF` bytes followed by the address
+/// repeated sixteen times.
+pub fn magic_packet(mac: [u8; 6]) -> Vec<u8> {
+    magic_packet_array(mac).to_vec()
+}
+
 /// Like [`magic_packet`], but appends a six-byte SecureOn password.
 pub fn magic_packet_with_password(mac: [u8; 6], password: [u8; 6]) -> Vec<u8> {
-    let mut out = magic_packet(mac);
-    out.extend_from_slice(&password);
-    out
+    magic_packet_with_password_array(mac, password).to_vec()
 }
 
 /// Errors that can come out of [`parse_mac`] or [`parse_password`].
@@ -146,6 +185,24 @@ mod tests {
         for chunk in pkt[6..].chunks(6) {
             assert_eq!(chunk, &mac);
         }
+    }
+
+    #[test]
+    fn magic_packet_array_matches_vec_variant() {
+        let mac = [0xA4, 0x83, 0xE7, 0x11, 0x22, 0x33];
+        let arr = magic_packet_array(mac);
+        let vec = magic_packet(mac);
+        assert_eq!(&arr[..], &vec[..]);
+    }
+
+    #[test]
+    fn magic_packet_with_password_array_matches_vec_variant() {
+        let mac = [0xA4, 0x83, 0xE7, 0x11, 0x22, 0x33];
+        let pw = [0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD];
+        let arr = magic_packet_with_password_array(mac, pw);
+        let vec = magic_packet_with_password(mac, pw);
+        assert_eq!(&arr[..], &vec[..]);
+        assert_eq!(&arr[MAGIC_PACKET_LEN..], &pw[..]);
     }
 
     #[test]
