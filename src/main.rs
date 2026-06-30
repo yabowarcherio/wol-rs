@@ -58,12 +58,18 @@ fn run(cli: Cli) -> Result<(), String> {
         .map(|s| parse_mac(s).map_err(|e| format!("{s:?}: {e}")))
         .collect::<Result<_, _>>()?;
 
+    if cli.repeat == 0 {
+        return Err("--repeat must be at least 1".into());
+    }
+
     if cli.dry_run {
         for mac in &macs {
             let pkt = match password {
                 Some(pw) => magic_packet_with_password(*mac, pw),
                 None => magic_packet(*mac),
             };
+            // Dry-run prints the bytes once even with --repeat>1; the
+            // payload is identical and only the network sees the count.
             for b in pkt {
                 print!("{b:02X}");
             }
@@ -78,13 +84,20 @@ fn run(cli: Cli) -> Result<(), String> {
             .map_err(|e| format!("set_broadcast: {e}"))?;
     }
 
+    let pause = std::time::Duration::from_millis(cli.interval_ms);
     for mac in &macs {
         let pkt = match password {
             Some(pw) => magic_packet_with_password(*mac, pw),
             None => magic_packet(*mac),
         };
-        sock.send_to(&pkt, (cli.broadcast, cli.port))
-            .map_err(|e| format!("send_to: {e}"))?;
+        for i in 0..cli.repeat {
+            sock.send_to(&pkt, (cli.broadcast, cli.port))
+                .map_err(|e| format!("send_to: {e}"))?;
+            // Pause between sends only, not after the final one.
+            if i + 1 < cli.repeat {
+                std::thread::sleep(pause);
+            }
+        }
     }
     Ok(())
 }
