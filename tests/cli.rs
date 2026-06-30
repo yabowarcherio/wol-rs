@@ -135,6 +135,34 @@ fn dry_run_conflicts_with_broadcast() {
 }
 
 #[test]
+fn repeat_zero_is_rejected() {
+    let (code, _, err) = stdout({
+        let mut c = bin();
+        c.args(["--dry-run", "--repeat", "0", "aa:bb:cc:dd:ee:ff"]);
+        c
+    });
+    assert_eq!(code, 2);
+    assert!(
+        err.contains("--repeat"),
+        "stderr should mention --repeat: {err}"
+    );
+}
+
+#[test]
+fn repeat_with_dry_run_prints_once() {
+    // The dry-run path emits the bytes once even when --repeat > 1, because
+    // the bytes don't change between sends and we don't want to spam stdout.
+    let (code, out, _) = stdout({
+        let mut c = bin();
+        c.args(["--dry-run", "--repeat", "5", "aa:bb:cc:dd:ee:ff"]);
+        c
+    });
+    assert_eq!(code, 0);
+    let lines: Vec<_> = out.lines().filter(|l| !l.is_empty()).collect();
+    assert_eq!(lines.len(), 1, "expected one line, got {lines:?}");
+}
+
+#[test]
 fn help_and_version_succeed() {
     for flag in ["--help", "-h", "--version", "-V"] {
         let (code, out, _) = stdout({
