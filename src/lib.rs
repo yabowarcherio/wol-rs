@@ -45,6 +45,15 @@ pub const BROADCAST_PORT: u16 = 9;
 /// The alternate port used by some receivers (`7`, `echo`).
 pub const ALT_BROADCAST_PORT: u16 = 7;
 
+/// The IPv4 limited-broadcast address `255.255.255.255` — the default
+/// destination when no subnet-specific broadcast address is known.
+pub const IPV4_LIMITED_BROADCAST: std::net::Ipv4Addr = std::net::Ipv4Addr::new(255, 255, 255, 255);
+
+/// The IPv6 all-nodes link-local multicast address `ff02::1`. The standard
+/// destination for Wake-on-LAN over IPv6, since IPv6 has no broadcast.
+pub const IPV6_ALL_NODES_LINK_LOCAL: std::net::Ipv6Addr =
+    std::net::Ipv6Addr::new(0xff02, 0, 0, 0, 0, 0, 0, 1);
+
 /// Length of a magic packet without a SecureOn password (6 + 6·16 bytes).
 pub const MAGIC_PACKET_LEN: usize = 102;
 
