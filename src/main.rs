@@ -35,6 +35,15 @@ struct Cli {
     /// Print the packet bytes to stdout instead of sending it.
     #[arg(long, conflicts_with = "broadcast")]
     dry_run: bool,
+
+    /// Send the packet N times per MAC. Some BIOSes need 2-3 packets before
+    /// the NIC believes it. Defaults to 1.
+    #[arg(long, value_name = "N", default_value_t = 1)]
+    repeat: u32,
+
+    /// Milliseconds to pause between repeated sends (ignored when --repeat=1).
+    #[arg(long, value_name = "MS", default_value_t = 100)]
+    interval_ms: u64,
 }
 
 fn run(cli: Cli) -> Result<(), String> {
