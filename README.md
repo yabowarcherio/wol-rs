@@ -7,6 +7,8 @@
 Build and send **Wake-on-LAN** magic packets in safe Rust. Library + CLI, no
 unsafe, no dependencies beyond `clap` for the CLI.
 
+Used as the magic-packet layer of [netscan-core](https://github.com/yabowarcherio/netscan-core).
+
 A magic packet is six `0xFF` bytes followed by the target MAC repeated sixteen
 times. An optional six-byte SecureOn password may be appended.
 
