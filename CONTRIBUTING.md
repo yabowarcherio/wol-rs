@@ -26,6 +26,12 @@ cargo build --no-default-features        # library-only must still build (no cla
 cargo deny check                         # licenses & advisories (if installed)
 ```
 
+Doc-tests too:
+
+```sh
+cargo test --doc --all-features
+```
+
 ## Design constraints
 
 - **The library has zero runtime dependencies.** `clap` is gated behind the
